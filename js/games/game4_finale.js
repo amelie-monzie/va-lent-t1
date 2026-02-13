@@ -1,10 +1,10 @@
 export const game4_finale = {
   render(root) {
+    // MODIFICATION ICI : On ferme la section et le wrap AVANT de déclarer le memeScreen
     root.innerHTML = `
       <div class="wrap">
         <section class="card" style="padding:24px; text-align:center; position:relative; overflow:hidden;">
           
-          <!-- Rideaux -->
           <div class="curtain curtain-left"></div>
           <div class="curtain curtain-right"></div>
 
@@ -20,33 +20,31 @@ export const game4_finale = {
 
           <p id="hint" style="margin-top:14px; min-height:22px; color:var(--muted); font-size:13px;"></p>
 
-          <!-- Écran MEME -->
-          <div id="memeScreen" class="meme-screen" aria-hidden="true">
-            <div class="meme-card">
-              <img
-                id="memeImg"
-                src="assets/img/memes/meme1.jpg"
-                alt="meme"
-                loading="eager"
-                decoding="async"
-              />
-              <p style="margin:12px 0 0; font-weight:800;">
-                APRES C'EST PAS UNE COMPÈTE HEIN ! 
-              </p>
-              <p style="margin:6px 0 0; color:var(--muted); font-size:13px;">
-                (j'ai quand même un petit quelque chose pour toi, cliques sur le singe)
-              </p>
-            </div>
-          </div>
-
-        </section>
+        </section> </div> <div id="memeScreen" class="meme-screen" aria-hidden="true">
+        <div class="meme-card">
+          <img
+            id="memeImg"
+            src="assets/img/memes/meme1.jpg"
+            alt="meme"
+            loading="eager"
+            decoding="async"
+            width="300"
+            height="300"
+          />
+          <p style="margin:12px 0 0; font-weight:800; color: white !important; font-size: 1.2rem; text-shadow: 0 2px 4px black;">
+            APRES C'EST PAS UNE COMPÈTE HEIN ! 
+          </p>
+          <p style="margin:6px 0 0; font-size:13px; color: #ddd !important; text-shadow: 0 1px 2px black;">
+            (j'ai quand même un petit quelque chose pour toi, cliques sur le singe)
+          </p>
+        </div>
       </div>
     `;
   },
 
   mount({ onSuccess }) {
     const laughSound = new Audio("assets/sfx/laugh.mp3");
-laughSound.volume = 0.9;
+    laughSound.volume = 0.9;
 
     const yes = document.getElementById("yesBtn");
     const no = document.getElementById("noBtn");
@@ -56,24 +54,20 @@ laughSound.volume = 0.9;
     let finished = false;
     let attempts = 0;
 
-    // Rideau : s’ouvre automatiquement
-    // NOUVEAU CODE (avec petit délai de 800ms)
-setTimeout(() => {
-  document.querySelector(".curtain-left")?.classList.add("open");
-  document.querySelector(".curtain-right")?.classList.add("open");
-}, 800);
+    // Rideau : s’ouvre automatiquement avec délai
+    setTimeout(() => {
+      document.querySelector(".curtain-left")?.classList.add("open");
+      document.querySelector(".curtain-right")?.classList.add("open");
+    }, 800);
 
-    // Place initiale du OUI (petit)
-    // On le met en "position: absolute" dans reward-stage (CSS)
+    // Place initiale du OUI
     function moveYesRandom() {
       const stage = document.querySelector(".reward-stage");
       if (!stage) return;
 
       const rect = stage.getBoundingClientRect();
-      // On limite pour rester dans la zone visible
       const padding = 8;
 
-      // Taille actuelle du bouton
       const bw = yes.offsetWidth;
       const bh = yes.offsetHeight;
 
@@ -88,9 +82,8 @@ setTimeout(() => {
     }
 
     function growYes() {
-      // Grandit progressivement, jusqu’à un max
-      const base = 0.72;              // départ petit
-      const add = Math.min(0.22, attempts * 0.04); // +4% par tentative, capped
+      const base = 0.72;
+      const add = Math.min(0.22, attempts * 0.04);
       const scale = Math.min(1.15, base + add);
       yes.style.transform = `scale(${scale})`;
     }
@@ -108,7 +101,6 @@ setTimeout(() => {
       hint.textContent = lines[Math.min(lines.length - 1, attempts)];
     }
 
-    // Rend le bouton Oui “incli­quable” : il fuit dès qu’on approche / touche
     function dodge() {
       if (finished) return;
       attempts += 1;
@@ -117,70 +109,60 @@ setTimeout(() => {
       moveYesRandom();
     }
 
-    // Important mobile: pointerdown capte avant click
     yes.addEventListener("pointerdown", (e) => {
       e.preventDefault();
       dodge();
     });
 
-    // Aussi si souris passe dessus (desktop)
     yes.addEventListener("mouseenter", dodge);
 
-    // NO : déclenche la “punition meme”
-    
+    // Clic sur NON
     no.addEventListener("click", () => {
-  if (finished) return;
-  finished = true;
+      if (finished) return;
+      finished = true;
 
-  // 🔊 Joue le son UNE FOIS
-  laughSound.currentTime = 0;
-  laughSound.play().catch(() => {});
+      // Son
+      laughSound.currentTime = 0;
+      laughSound.play().catch(() => {});
 
-  document.querySelector(".reward-stage")?.classList.add("fade-out");
-  hint.textContent = "";
+      // Fade out du jeu
+      document.querySelector(".reward-stage")?.classList.add("fade-out");
+      hint.textContent = "";
 
-  memeScreen.classList.add("show");
-  memeScreen.setAttribute("aria-hidden", "false");
+      // Affichage du Meme
+      memeScreen.classList.add("show");
+      memeScreen.setAttribute("aria-hidden", "false");
 
-  startLaughRain();
-  const memeImg = document.getElementById("memeImg");
-      // On indique que c'est cliquable
-      memeImg.style.cursor = "pointer"; 
-      
-      // Quand on clique sur le singe
+      startLaughRain();
+
+      // Gestion du clic sur le singe pour passer à la suite
+      const memeImg = document.getElementById("memeImg");
+      memeImg.style.cursor = "pointer";
+
       memeImg.addEventListener('click', () => {
-          // On coupe le rire s'il tourne encore
-          laughSound.pause();
-          
-          // On cache l'écran mème
-          memeScreen.classList.remove("show");
-          
-          // IMPORTANT : On passe au jeu suivant (Game 5)
-          // On suppose que ton système utilise onSuccess pour changer de jeu
-          setTimeout(() => {
-               onSuccess(); 
-          }, 300);
-      }, { once: true }); // {once:true} pour s'assurer qu'on ne clique qu'une fois
-
-      // ----------------------------------
+        laughSound.pause();
+        memeScreen.classList.remove("show");
+        
+        // Passage au jeu suivant
+        setTimeout(() => {
+          onSuccess();
+        }, 300);
+      }, { once: true });
     });
 
-
-
-    // Position initiale du oui
-    // On attend un tick pour que le layout soit calculé
+    // Init positions
     setTimeout(() => {
       moveYesRandom();
       growYes();
     }, 50);
 
-    // --- Laugh effects ---
+    // Pluie de rires
     function startLaughRain() {
       const emojis = ["HAHA", "🤣", "😂", "mdr", "PTDR", "💀", "AHAHA"];
       const container = memeScreen;
 
       let count = 0;
-      const max = 40; // densité
+      const max = 40;
 
       const interval = setInterval(() => {
         if (count >= max) {
@@ -193,15 +175,13 @@ setTimeout(() => {
         el.className = "laugh-float";
         el.textContent = emojis[Math.floor(Math.random() * emojis.length)];
 
-        // random start
         el.style.left = `${Math.floor(Math.random() * 90) + 5}%`;
         el.style.top = `${Math.floor(Math.random() * 80) + 10}%`;
         el.style.animationDuration = `${2.4 + Math.random() * 1.8}s`;
-        el.style.transform = `rotate(${Math.floor(Math.random()*20 - 10)}deg)`;
+        el.style.transform = `rotate(${Math.floor(Math.random() * 20 - 10)}deg)`;
 
         container.appendChild(el);
 
-        // remove later
         setTimeout(() => el.remove(), 4500);
       }, 90);
     }
